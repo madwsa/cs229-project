@@ -270,8 +270,8 @@ Collaborative Filtering \cite{liang2018variational}.  One assumes $z_ui$
 to follow an exponential family of distributions, i.e. $z_{ui} \sim
   \textrm{EXPFAM}(r_{ui};\eta(\theta_u;\beta_i;\omega))$, with $\beta_i$ and
 $\theta_u$ representing latent item and user parameters, respectively,
-with $\mathbb{E}(r_{ui}|\bf{\theta}_u,\bf{\beta}_i) =
-  g_{\omega}(\bf{\theta}_u;\bf{\beta}_i)$ for some nonlinear $g_{\omega}$
+with $\mathbb{E}(z_{ui}|{\theta}_u,{\beta}_i) =
+  g_{\omega}({\theta}_u;{\beta}_i)$ for some nonlinear $g_{\omega}$
 (in this case a neural network).
 
 \subsection{LassoNet}
@@ -359,13 +359,15 @@ visited in the regularization path may be sensitive to small changes in
 the data.
 
 Additionally, during regularization, a lot of predictive value seems to
-be given up for early values of $\lambda$; this seems counterintuitive,
-since that woud seem to indicate that the most important features are the ones
-given up first, unless the chosen embedding space is perhaps far too
-low-dimensional, given the problem, to afford the loss of any
-information.  Though, we see that even with a hidden layer of dimension
-500, much larger than the dimension of the latent feature spaces found
-in the warm start, this condition seems to persist.
+be given up for early values of $\lambda$.  The feature importance curve
+is long tailed, and relatively high values of $\lambda$ have to be
+arrived at before any features are effectively removed. There is a
+well-understood popularity bias in collaborative filtering.
+Unurprisingly, therefore, there is in fact a small number of `important'
+movies that are predictive of preferences, but to maximize predictive
+power, as many preferences as possible are needed.  Once only a few
+`unimportant' movies are taken away, the error increases and doesn't
+increase much farther.
 
 The default hierarchy parameter $M = 10$ was attested in
 \cite{lemhadri_lassonet_2021} to work well for a large variety of
@@ -373,15 +375,12 @@ datasets, but those authors also stated that it would be difficult to set
 without some expertise on the domain or task; the next, obvious step
 would be to try to tune this parameter.
 
-It may be that a few examples of highly informative, common preferences
-would still be useful in cold starts in collaborative filtering, and it
-may still be possible through collaborative filtering alone.  There may
-be more direct, obvious ways to detect such items; this author is only
-beginning learning about recommendation systems and information
-retrieval.  The question `which preferences are most informative about a
-users' other preferences' is still, we believe, a reasonable one, even
-if we may not have achieved a definitive answer for how to arrive at
-such.
+Preferences that are informative of other preferences are at the core of
+collaborative filtering.  There may be more direct, obvious ways to
+detect such highly informative items; this author is only beginning
+learning about recommendation systems and information retrieval.  The
+question `which preferences are most informative about a users' other
+preferences' is still, we believe, a reasonable one.
 
 \section{Acknowledgements \& contributions}
 
