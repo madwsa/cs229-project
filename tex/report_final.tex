@@ -1,0 +1,399 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2020
+
+% ready for submission
+% \usepackage{neurips_2020}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2020}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2020}
+
+% to avoid loading the natbib package, add option nonatbib:
+     \usepackage[final]{neurips_2020}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{natbib}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[export]{adjustbox}
+
+%% TABLES AND SUCH GO HERE
+
+\newcommand{\valmetrics}{
+  \begin{table}[hbt!]
+    \vspace{-2mm}
+    \centering
+    \begin{tabular}{cccccc}
+      \hline
+              & \multicolumn{5}{c}{Evaluation metric}                                                                         \\
+      \cline{2-6}
+              & AUC                                   & MAP             & nDCG@10         & Precision@10    & Recall@10       \\
+      \hline
+      ItemKNN & 0.7436                                & 0.0129          & 0.0059          & 0.0068          & 0.0046          \\
+      MF      & 0.7882                                & 0.0291          & 0.0383          & 0.0293          & 0.0382          \\
+      \textbf{BPR}     & \textbf{0.9355}                       & \textbf{0.0681} & \textbf{0.0791} & \textbf{0.0533} & \textbf{0.0915} \\
+      BiVAECF & 0.9326                                & 0.0641          & 0.0737          & 0.0497          & 0.0869          \\
+      \hline
+    \end{tabular}
+    \caption{Evaluation metrics on validation set (\%15 sampled from MovieLens 1MM)}
+    \label{tab:val}
+    \begin{tabular}{cccccc}
+      \hline
+              & \multicolumn{5}{c}{Evaluation metric}                                                                         \\
+      \cline{2-6}
+              & AUC                                   & MAP             & nDCG@10         & Precision@10    & Recall@10       \\
+      \hline
+      ItemKNN & 0.7401                                & 0.0166          & 0.0084          & 0.0097          & 0.0048          \\
+      MF      & 0.7868                                & 0.0338          & 0.0476          & 0.0399          & 0.0360          \\
+      \textbf{BPR}     & \textbf{0.9373}                       & \textbf{0.0819} & \textbf{0.0989} & \textbf{0.0769} & \textbf{0.0896} \\
+      BiVAECF & 0.9354                                & 0.0771          & 0.0909          & 0.0703          & 0.0841          \\
+      \hline
+    \end{tabular}
+    \caption{Evaluation metrics on test set  (\%15 sampled from MovieLens 1MM)}
+    \label{tab:test}
+    \vspace{-2mm}
+  \end{table}
+}
+
+\newcommand{\movierankings}{
+  \begin{multicols}{2}
+    \textbf{BPR warm start} :
+    \begin{enumerate}
+      \item \emph{Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb} (1964), [1201]
+      \item \emph{The Fugitive} (1993) [1128]
+      \item \emph{Terminator 2: Judgment Day} (1991) [1065]
+      \item \emph{Fargo} (1995) [1032]
+      \item \emph{The Shawshank Redemption} (1994) [1030]
+    \end{enumerate}
+  
+    \columnbreak
+  
+    \textbf{BiVAECF warm start} :
+    \begin{enumerate}
+      \item \emph{Babe} (1995) [1242]
+      \item \emph{Amadeus} (1984)
+      \item \emph{The Silence of the Lambs} (1995) [1173]
+      \item \emph{Casablanca} (1942) [1163]
+      \item \emph{True Lies} (1997) [1155]
+    \end{enumerate}
+  \end{multicols}
+}
+\newcommand{\regfigures}{
+  \begin{tabular}{lll}
+    Regularization path, 100 hidden layers & \includegraphics[width=.25\linewidth,valign=m]{figs/bpr_regpath100.png} & \includegraphics[width=.25\linewidth,valign=m]{figs/bivae_regpath100.png} \\
+    Regularization path, 500 hidden layers & \includegraphics[width=.25\linewidth,valign=m]{figs/bpr_regpath500.png} & \includegraphics[width=.25\linewidth,valign=m]{figs/bivae_regpath500.png} \\
+    Feature importance, 100 hidden layers & \includegraphics[width=.25\linewidth,valign=m]{figs/bpr_importance100.png} & \includegraphics[width=.25\linewidth,valign=m]{figs/bivae_importance100.png} \\
+    Feature importance, 500 hidden layers & \includegraphics[width=.25\linewidth,valign=m]{figs/bpr_importance500.png} & \includegraphics[width=.25\linewidth,valign=m]{figs/bivae_importance500.png}
+  \end{tabular} \label{fig:regfigures}
+}
+
+\title{Seeking Feature Sparsity in Collaborative Filtering with LassoNet}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+\author{
+  Will Armstrong \\
+  CS 229 final course project \\
+  Finance \& Commerce category \\
+  \texttt{wrmstrng@stanford.edu}, SUID\# 06606233 \\
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+\begin{document}
+
+\maketitle
+
+% \begin{abstract}
+%   (Will write the abstract last.)
+% \end{abstract}
+
+\section{Introduction}
+
+The problem of matrix completion (or, equivalently, matrix imputation,
+or matrix reconstruction) can be summarized as follows: given a matrix
+$Z \in \mathbb{R}^{m\times n}$, and a set $\Omega \subset
+  \left\{1,\ldots,m\right\}\times\left\{1,\ldots,n\right\}$ of indices of
+observed entries of $Z$, can we infer the values for the unobserved
+entries $Z_{\Omega^\bot}$?  This has applications to the theory of
+control systems for system identification, to providing precise location
+estimates for sensors given distances to known markers, and to signal
+frequency and direction detection in signal processing
+\cite{candes_power_2009}.
+
+Our interest is in the application of matrix completion to product
+recommendation systems through \emph{collaborative filtering} (as in
+\cite{goldberg_using_1992}); given a set of $u$ individual customers,
+and a set of $i$ items, let $z_{u, i}$ be given as a measure of the
+`affinity' of individual $u \in \left\{1,\ldots,m\right\}$ for product
+$i \in \left\{1,\ldots,n\right\}$, whether measured directly (as through
+user reviews or star ratings) or indirectly (through, e.g., page views
+or purchase behaviour).  The task is then to complete the matrix $Z$ by
+inferring the unobserved affinities $Z_{\Omega^\bot}$ from
+user-item relationships for the observed affinities $Z_\Omega$.
+
+Collaborative filtering methods face a \emph{cold start problem} problem
+that content-based recommendations do not; new items and new users both
+lack the observed affinities necessary from which to make meaninful
+inferences. One side of this problem can potentially be mitigated by
+actively capturing users' preferences for examples of items that are highly
+informative of their preferences early on.  To this end, we investigate
+LassoNet \cite{lemhadri_lassonet_2021}, a regularization method for
+achieving feature sparsity in artifical neural networks.
+
+\section{Related work}
+
+There is a wealth of research into mitigating the cold-start problem in
+collaborative filtering. \cite{guo2014merging} proposes a merging of
+users explictly trusted (and specified) by a given user, while
+\cite{sedhain2014social} proposes augmenting with demographic data and
+online social media activity. \cite{chae2020ar} proposes generating
+`virtual, but plausible neighbors' to cold-start users.
+\cite{said2012analyzing} proposes weighting schemes from cold-start,
+post cold-start, and power users separately. \cite{wei2017collaborative}
+is an example of one of the many avenues that seek to uncover more
+latent information with richer model architectures.  Unsurprisingly,
+recommendation systems is a very large area with a great deal of
+application and an abundance of research.
+
+\section{Dataset and features}
+
+In the course of our investigation, we will use the somewhat famous
+MovieLens dataset\footnote{https://grouplens.org/datasets/movielens/},
+provided by GroupLens and the University of Minnesota.  The MovieLens 1M
+dataset consists of 1,000,209 distinct ratings (on a scale from 1 to 5)
+of 3,706 movies by 6,040 users, each user having rated at least 20
+movies. The data consist of the tuples (\texttt{userID},
+\texttt{itemID}, \texttt{rating}, \texttt{timestamp}) for each rating.
+The MovieLens 100k dataset is similarly structured, and comprised of
+100,000 distinct reviews by 943 users of 1,682 movies.  For methods that
+rely on explicit feedback, the star rating was used directly; for implicit
+feedback, a positive case was taken to be a star rating of 4.0
+or greater.
+
+\section{Methods}
+
+\cite{lemhadri_lassonet_2021} proposes a variant of the LassoNet
+algorithm (described in the same paper) for matrix completion, with a
+`warm start' procedure that commences with row-mean imputation and then
+alternating rounds of unsupervised row reconstruction and re-imputation from
+the reconstructed elements.  We attempt here a different warm-start scenario
+for LassoNet, where the machine learning task over which the regularization
+path is found is to reconstruct a user-item affinity matrix whose inferred
+completion is estimated by other means.
+
+Two baseline methods, Item-based k-nearest-neighbor (ItemKNN) \cite{ItemKNN} and Matrix Factorization
+(MF) \cite{koren_matrix_2009}, were chosen, as well as two high
+benchmarking collaborative filtering methods: Bayesian Personalized
+Ranking (BPR) \cite{BPR} and Bilateral Variational Autoencoder for Collaborative
+Filtering (BiVAECF) \cite{BiVAECF}.
+
+\subsection{Collaborative filtering methods}
+
+\subsubsection{Item-based k-nearest-neighbor (ItemKNN)}
+
+ItemKNN is an extension of k-nearest-neighbors which aims to provide
+recommendations of similar items.  The distance measure here between
+item $i$ and item $j$ is simply $\cos(\theta)$, where $\theta$ is the
+angle between the zero-filled vectors $z_i$ and $z_j$.
+
+\subsubsection{Matrix Factorization (MF)}
+
+Matrix factorization is a broad category of techniques; in its simplest
+form, we suppose the matrix $Z = WH$, with $W \in \mathbb{R}^{k\times
+    n}, H \in \mathbb{R}^{u\times m}$, $W$ a matrix of latent item factors,
+and $R$ a matrix of latent user factors, with $k$ the number of latent
+factors.
+
+This decomposition can be found by minimizing $||\hat{Z} - Z_\Omega||_F
+  + \lambda_W||W||_F + \lambda_H||H||_F$, where $||\cdot||_F$ is the Frobenius
+norm.
+
+\subsubsection{Bayesian Personalized Ranking (BPR)}
+
+Bayesian Personalized Ranking seeks to optimize the posterior
+probability of model parameters $\Theta$, $$p(\Theta | >_u) \sim
+  p(>_u|\Theta)p(\Theta)$$ given a user's implicit preference relation
+$>_u$ among items, where the probability user $u$ prefers item $i$ over
+item $j$ is defined as $p(i >_{u} j \mid \Theta) = \sigma
+  (x_{uij}(\Theta))$, with $\sigma$ the logistic function.  The
+maximum a posteriori estimator $$J = \sum_{(u, i, j)} \log
+  \sigma(x_{uij}) - \lambda_{\Theta} ||\Theta||^2$$ is differentable
+and solvable by stochastic gradient descent.  $x_{uij}$ is estimated by
+$\hat{x}_{uij} = \hat{x}_{ui} - \hat{x}_{uj}$, which in turn is estimated by matrix factorization:
+$$ \hat{x}_{ui} = \langle w_u , h_i \rangle = \sum_{f=1}^{k} w_{uf} \cdot h_{if} $$
+
+\subsubsection{Bilateral Variational Autoencoder for Collaborative
+  Filtering (BiVAECF)}
+
+BiVAECF is a generative model that extends Variational Autoencoders for
+Collaborative Filtering \cite{liang2018variational}.  One assumes $z_ui$
+to follow an exponential family of distributions, i.e. $z_{ui} \sim
+  \textrm{EXPFAM}(r_{ui};\eta(\theta_u;\beta_i;\omega))$, with $\beta_i$ and
+$\theta_u$ representing latent item and user parameters, respectively,
+with $\mathbb{E}(r_{ui}|\bf{\theta}_u,\bf{\beta}_i) =
+  g_{\omega}(\bf{\theta}_u;\bf{\beta}_i)$ for some nonlinear $g_{\omega}$
+(in this case a neural network).
+
+\subsection{LassoNet}
+
+The motivation for LassoNet is to provide a means to achieve feature
+sparsity in arbitrary, potentially deep residual neural networks.
+
+Taking $f$ to be a residual feed-forward neural network, i.e.,
+$$f(x) = \theta^Tx + f_W(x),$$ we minimize the $L_1$ penalized loss
+$$L(\theta, W) + \lambda||\theta||_1,$$ subject to the constraint
+$$||W^{(0)}_j||_\infty \leq M|\theta_j|, j \in \left\{1, \ldots, d\right\},$$
+where $d$ is the dimension of $\theta$.  Regularization is achieved here in
+two ways; the $L_1$ penalty controls the complexity of the fitted model,
+and $M$, the hierarchy coefficient, controls the mixture of the
+linear (residual) and nonlinear components.
+
+Minimizing the objective is solvable by a proximal gradient descent algorithm
+outlined in \cite{lemhadri_lassonet_2021}.
+
+\section{Results}
+
+The MovieLens 1M dataset was partitioned into a 70\% / 15\% / 15\% train
+/ validation / test split such that every item was reviewed at least once and
+every user contributed at least one review in each partition of the data.
+Hyperparamter tuning was done using grid search on $k$ for ItemKNN, and
+random search for all others.  For BPR, the hyperparameters that
+maximize the AUC of implicit preferences on the validation set were
+chosen, for all others, those maximizing RMSE of explicit ratings were
+chosen.  The hyperparameters selected were: $k=20$ for ItemKNN,
+$k=150$\footnote{For ItemKNN, $k$ denotes the $k$ nearest neighbors; for
+  all others, $k$ is the number of latent feature dimensions.} and
+learning rate $\alpha \approx 0.0084$ for MF, and $k=120$ and $\alpha
+  \approx 0.0099$ for BPR.
+
+For BiVAECF, an architecture of one hidden layer of dimension 200 was
+chosen \emph{a priori} with $\tanh$ activation, and the models were
+trained for 400 epochs.  A batch size of 64, learning rate $\alpha
+  \approx 0.0025$, and $k = 30$ hidden dimensions were the hyperparameters
+estimated.
+
+Tables \ref{tab:val} and \ref{tab:test} show implicit preference validation
+metrics on the validation and test datasets, respectively.
+
+\valmetrics
+
+In addition to
+AUC on implicit preference, we show several information retrieval metrics:
+Normalized Discounted Cumulative Gain\footnote{
+  nDCG@10 is given by $\sum_{i = 1}^{10} \frac{2^{y_i} - 1}{\log_2(i + 1)}$
+  where $i$ ranges over the 10 items recommended to a given user, and
+  $y_i$ is the preference of that user for item $i$
+} as well as precision and recall, for the 10 highest inferred ranking items
+for each user.
+
+The fitted BiVAECF and BPR models were then used to construct a matrix
+of inferred affinities for those users and items who also appear in the
+MovieLens100k dataset, and LassoNet was used to find a regularization
+path through movies over the task of reconstructing each row of
+standardized preferences through a residual feed-forward artifical
+neural network (once with a single hidden layer of 100 neurons, and once
+with 500), with the default hierarchy parameter of $M = 10$, with a 75\%
+/ 25\% train / validation split.  The regularization path over
+successive values of $\lambda$ is shown in \ref{fig:regfigures}, as well
+as the feature importance, here defined as the value of $\lambda$ at
+which the feature is removed.
+
+\regfigures
+
+Among the 100 most popular movies, the last to be removed on each
+regularization path were:
+
+\movierankings
+
+(Numbers in parentheses are the year the movie was released, numbers in
+square brackets are their feature importance ranking).
+
+\section{Conclusions and future work}
+
+It would be tempting to interpret the movies listed above as perhaps
+approaching a short list of movies that are at a saddle point between
+being most informative about a person's movie preferences and most
+abundant among peoples' preferences.  If they are, the question remains
+whether it is such `a' list, or `the' list, since the order features are
+visited in the regularization path may be sensitive to small changes in
+the data.
+
+Additionally, during regularization, a lot of predictive value seems to
+be given up for early values of $\lambda$; this seems counterintuitive,
+since that woud seem to indicate that the most important features are the ones
+given up first, unless the chosen embedding space is perhaps far too
+low-dimensional, given the problem, to afford the loss of any
+information.  Though, we see that even with a hidden layer of dimension
+500, much larger than the dimension of the latent feature spaces found
+in the warm start, this condition seems to persist.
+
+The default hierarchy parameter $M = 10$ was attested in
+\cite{lemhadri_lassonet_2021} to work well for a large variety of
+datasets, but those authors also stated that it would be difficult to set
+without some expertise on the domain or task; the next, obvious step
+would be to try to tune this parameter.
+
+It may be that a few examples of highly informative, common preferences
+would still be useful in cold starts in collaborative filtering, and it
+may still be possible through collaborative filtering alone.  There may
+be more direct, obvious ways to detect such items; this author is only
+beginning learning about recommendation systems and information
+retrieval.  The question `which preferences are most informative about a
+users' other preferences' is still, we believe, a reasonable one, even
+if we may not have achieved a definitive answer for how to arrive at
+such.
+
+\section{Acknowledgements \& contributions}
+
+Thanks to Stanford Ph.D candidate Ismael Lemhadri, who sponsored this
+project, for being willing to share his insights into LassoNet and his
+research, and to the CS229 course staff for their patience and helpful
+advice.  Will Armstrong was the sole CS229 student who contributed, with
+the advice and guidance of those thanked herein.
+
+Code used can be found at \url{https://github.com/madwsa/cs229-project}.
+
+\bibliography{report_final}
+\bibliographystyle{plain}
+
+\end{document}
